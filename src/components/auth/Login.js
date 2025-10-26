@@ -1,0 +1,62 @@
+import { Form } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { useContext, useState } from "react";
+import AuthService from "../../service/auth/AuthService";
+import { UserContext } from "../../UserContext";
+
+function Login() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const { user, setUser } = useContext(UserContext);
+  const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    let data = AuthService.login(username, password);
+    if (data && data.success) {
+      setUser(data.user);
+      navigate("/");
+    } else {
+      setErrorMessage(data ? data.message : "Login failed");
+    }
+  }
+
+  return (
+    <div>
+      <h1>Login</h1>
+      <Form onSubmit={handleSubmit}>
+        <Form.Group className="mb-3" controlId="formUsername">
+          <Form.Label>Username</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Enter username"
+            onChange={(e) => {
+              setUsername(e.target.value);
+            }}
+          />
+        </Form.Group>
+        <Form.Group className="mb-3" controlId="formPassword">
+          <Form.Label>Password</Form.Label>
+          <Form.Control
+            type="password"
+            placeholder="Password"
+            onChange={(e) => {
+              setPassword(e.target.value);
+            }}
+          />
+        </Form.Group>
+        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+        <button variant="primary" type="submit">
+          Submit
+        </button>
+        <a href="/register" className="ms-3">
+          Register
+        </a>
+      </Form>
+    </div>
+  );
+}
+
+export default Login;
