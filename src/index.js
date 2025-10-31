@@ -6,6 +6,7 @@ import reportWebVitals from "./reportWebVitals";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { UserProvider } from "./components/UserProvider";
 import { BrowserRouter } from "react-router-dom";
+import CreateExam from "./components/exam/admin/CreateExam";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

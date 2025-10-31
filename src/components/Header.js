@@ -1,23 +1,38 @@
-function Header() {
+import { UserContext } from "../UserContext";
+import { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+function Header({ index, navItem, disable }) {
+  const { user, setUser } = useContext(UserContext);
+  const navigate = useNavigate();
+  function handleLogout() {
+    setUser({});
+    navigate("/");
+  }
+
   return (
-    <header class="sticky-top shadow-lg bg-light">
-      <nav class="navbar navbar-expand-lg navbar-light bg-light container">
+    <header
+      className="sticky-top shadow-lg bg-light"
+      style={{
+        display: disable ? "none" : "block",
+      }}
+    >
+      <nav className="navbar navbar-expand-lg navbar-light bg-light container">
         <a className="navbar-brand d-flex align-items-center" href="/">
           <div
-            class="rounded d-flex align-items-center justify-content-center"
+            className="rounded d-flex align-items-center justify-content-center"
             style={{
               width: "40px",
               height: "40px",
               background: "linear-gradient(135deg,#4f46e5,#6366f1)",
             }}
           >
-            <span class="text-white fw-bold fs-4">E</span>
+            <span className="text-white fw-bold fs-4">EP</span>
           </div>
-          <span class="ms-2 fw-bold fs-3 text-dark">EduTest</span>
+          <span className="ms-2 fw-bold fs-3 text-dark">English Pro</span>
         </a>
 
         <button
-          class="navbar-toggler"
+          className="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarNav"
@@ -28,39 +43,56 @@ function Header() {
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto me-4">
-            <li class="nav-item">
-              <a className="nav-link active text-dark fw-medium" href="/">
-                Trang chủ
-              </a>
-            </li>
-            <li class="nav-item">
-              <a className="nav-link text-secondary" href="/">
-                Bài thi
-              </a>
-            </li>
-            <li class="nav-item">
-              <a className="nav-link text-secondary" href="/">
-                Kết quả
-              </a>
-            </li>
-            <li class="nav-item">
-              <a className="nav-link text-secondary" href="/">
-                Hỗ trợ
-              </a>
-            </li>
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav ms-auto me-4">
+            {navItem &&
+              navItem.map((item, idx) => (
+                <li className="nav-item" key={idx}>
+                  <a
+                    className={
+                      idx === index
+                        ? "nav-link text-dark fw-medium"
+                        : "nav-link"
+                    }
+                    href={item.link}
+                  >
+                    {item.name}
+                  </a>
+                </li>
+              ))}
           </ul>
 
-          <div class="d-flex">
-            <button class="btn btn-outline-primary me-2">Đăng nhập</button>
-            <button
-              class="btn text-white"
-              style={{ background: "linear-gradient(135deg,#4f46e5,#6366f1)" }}
-            >
-              Đăng ký
-            </button>
-          </div>
+          {user && user.username ? (
+            <div className="me-3 d-flex align-items-centers gap-3 r">
+              <p className="m-auto"> Xin chào, {user.username}</p>
+              <button
+                className="btn "
+                onClick={() => {
+                  handleLogout();
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="d-flex">
+              <button
+                className="btn btn-outline-primary me-2"
+                onClick={() => navigate("/login")}
+              >
+                Login
+              </button>
+              <button
+                className="btn text-white"
+                style={{
+                  background: "linear-gradient(135deg,#4f46e5,#6366f1)",
+                }}
+                onClick={() => navigate("/register")}
+              >
+                Register
+              </button>
+            </div>
+          )}
         </div>
       </nav>
     </header>

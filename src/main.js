@@ -3,35 +3,64 @@ import Exam from "./model/Exam.js";
 import Question from "./model/Question.js";
 import Option from "./model/Option.js";
 import { ExamService } from "./service/exam/ExamService.js";
+import { StudentExamService } from "./service/exam/StudentExamService.js";
 
-// Build a small sample exam with two questions
-const q1Options = [
-  new Option("2", false),
-  new Option("3", true),
-  new Option("4", false),
-  new Option("5", false),
+let examDetail = [
+  {
+    questionId: 1,
+    questionContent: "Which keyword is used to define a class in Java?",
+    options: [
+      {
+        optionId: 1,
+        optionContent: "class",
+        isCorrect: true,
+      },
+      {
+        optionId: 2,
+        optionContent: "struct",
+        isCorrect: false,
+      },
+      {
+        optionId: 3,
+        optionContent: "define",
+        isCorrect: false,
+      },
+    ],
+  },
+  {
+    questionId: 2,
+    questionContent: "What is the size of int in Java?",
+    options: [
+      {
+        optionId: 4,
+        optionContent: "2 bytes",
+        isCorrect: false,
+      },
+      {
+        optionId: 5,
+        optionContent: "4 bytes",
+        isCorrect: true,
+      },
+      {
+        optionId: 6,
+        optionContent: "8 bytes",
+        isCorrect: false,
+      },
+    ],
+  },
 ];
 
-const q2Options = [
-  new Option("Paris", true),
-  new Option("London", false),
-  new Option("Berlin", false),
-  new Option("Rome", false),
-];
-
-const questions = [
-  new Question("What is 1 + 2?", q1Options),
-  new Question("What is the capital of France?", q2Options),
-];
-
-export const sampleExam = new Exam(
-  "Sample General Knowledge Exam",
-  "Scheduled", // examStatus
-  30, // duration in minutes
-  new Date("2025-11-01T09:00:00Z"), // startDate
-  new Date("2025-11-01T09:30:00Z"), // endDate
-  questions
-);
-
-console.log("Sample Exam:", sampleExam);
-ExamService.createExam(sampleExam);
+let studentExam = {
+  studentChoices: [
+    {
+      questionId: 1,
+      selectedOptions: [1],
+    },
+    {
+      questionId: 2,
+      selectedOptions: [5],
+    },
+  ],
+  examDetail: examDetail,
+};
+console.log("Score:", StudentExamService.calculateScore(studentExam));

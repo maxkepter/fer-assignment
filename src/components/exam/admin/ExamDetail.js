@@ -1,15 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Form, Button, Modal, Row, Col, ListGroup } from "react-bootstrap";
 import { ExamService } from "../../../service/exam/ExamService";
-import { useNavigate } from "react-router-dom";
-function CreateExam() {
-  const [examName, setExamName] = useState("");
-  const [duration, setDuration] = useState(1);
-  const [questions, setQuestions] = useState([]);
-  const [examError, setExamError] = useState("");
-  const [showModal, setShowModal] = useState(false);
+import { Link, useParams } from "react-router-dom";
+import { ErrorModal } from "../../modal/ErrorModal";
+function ExamDetail() {
+  const examId = useParams().id;
+  const [examData, setExamData] = useState({});
+  const [examName, setExamName] = useState(examData.examName);
+  const [duration, setDuration] = useState(examData.duration);
+  const [questions, setQuestions] = useState(examData.questions || []);
   const [numberQuestion, setNumberQuestion] = useState(0);
+  const [examError, setExamError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [updateIndex, setUpdateIndex] = useState(-1);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [questionContent, setQuestionContent] = useState("");
@@ -18,8 +22,21 @@ function CreateExam() {
     { optionContent: "", isCorrect: false },
   ]);
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    ExamService.getExamById(examId)
+      .then((data) => {
+        setExamData(data);
+        setExamName(data.examName);
+        setDuration(data.duration);
+        setQuestions(data.questions || []);
+        setNumberQuestion(data.numberQuestion);
+      })
+      .catch((error) => {
+        setErrorMessage(error.message);
+      });
+  }, [examId]);
 
+  // ---- Question management ----
   const handleAddOption = () => {
     setOptions([...options, { optionContent: "", isCorrect: false }]);
   };
@@ -57,7 +74,6 @@ function CreateExam() {
 
   const handleAddQuestion = () => {
     // Validate
-
     if (!questionContent.trim()) {
       alert("Question content is required!");
       return;
@@ -88,49 +104,54 @@ function CreateExam() {
     } else {
       setQuestions([...questions, newQuestion]);
     }
-    // Reset
+
+    // Reset state
     setQuestionContent("");
     setOptions([
       { optionContent: "", isCorrect: false },
       { optionContent: "", isCorrect: false },
     ]);
     setIsUpdateMode(false);
-
     setShowModal(false);
   };
 
-  const handleCreateExam = () => {
-    setExamError("");
-    if (!examName.trim() || duration <= 0) {
-      setExamError("Exam name and valid duration are required!");
-      return;
-    }
-    if (questions.length === 0) {
-      setExamError("At least one question is required to create an exam!");
-      return;
-    }
+  const handleSaveExam = async () => {
+    try {
+      if (!examName.trim() || duration <= 0) {
+        setExamError("Exam name and valid duration are required!");
+        return;
+      }
+      if (questions.length === 0) {
+        setExamError("At least one question is required!");
+        return;
+      }
 
-    if (numberQuestion <= 0 || numberQuestion > questions.length) {
-      setExamError(
-        "Number of questions must be greater than 0 and less than or equal to total questions added!"
-      );
-      return;
-    }
+      if (numberQuestion <= 0 || numberQuestion > questions.length) {
+        setExamError(
+          "Number of questions must be greater than 0 and less than or equal to total questions added!"
+        );
+        return;
+      }
 
-    const exam = {
-      examName,
-      examStatus: "ACTIVE",
-      duration,
-      numberQuestion,
-      questions,
-    };
-    ExamService.createExam(exam);
-    setShowSuccessModal(true);
+      const updatedExam = {
+        ...examData,
+        examName,
+        duration,
+        questions,
+      };
+
+      await ExamService.updateExam(examId, updatedExam);
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error(error);
+      setExamError("Failed to update exam. Please try again.");
+    }
   };
 
   return (
     <div className="p-4">
-      <h3>Create Exam</h3>
+      <h3>Exam Detail</h3>
+
       <Row>
         <Col sm={4}>
           <Form>
@@ -138,7 +159,6 @@ function CreateExam() {
               <Form.Label>Exam Name</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Enter exam name"
                 value={examName}
                 onChange={(e) => setExamName(e.target.value)}
               />
@@ -149,11 +169,11 @@ function CreateExam() {
               <Form.Control
                 type="number"
                 min={1}
-                placeholder="Enter duration"
                 value={duration}
-                onChange={(e) => setDuration(e.target.value)}
+                onChange={(e) => setDuration(Number(e.target.value))}
               />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Number Question</Form.Label>
               <Form.Control
@@ -166,27 +186,33 @@ function CreateExam() {
               />
             </Form.Group>
           </Form>
+
           {examError && <p className="text-danger">{examError}</p>}
+
           <div className="d-flex flex-column gap-2">
             <Button variant="primary" onClick={() => setShowModal(true)}>
               Add Question
             </Button>
             <Button
               variant="success"
-              onClick={handleCreateExam}
+              onClick={handleSaveExam}
               disabled={questions.length === 0}
             >
-              Create Exam
+              Save Changes
             </Button>
+            <Link className="btn btn-secondary" to="../exam">
+              Back to Exam List
+            </Link>
           </div>
         </Col>
+
         <Col sm={8}>
-          <h5 className="mt-4">Questions Added</h5>
+          <h5 className="mt-4">Questions</h5>
           {questions.length === 0 ? (
             <p>No questions yet.</p>
           ) : (
             <ListGroup>
-              {questions.map((q, idx) => (
+              {questions.map((q, index) => (
                 <ListGroup.Item key={q.questionId}>
                   <Row>
                     <Col sm={10}>
@@ -207,36 +233,25 @@ function CreateExam() {
                       <Button
                         variant="primary"
                         size="sm"
-                        onClick={() => handleUpdateQuestion(idx)}
+                        onClick={() => handleUpdateQuestion(index)}
                       >
                         Update
                       </Button>
                       <Button
                         variant="danger"
                         size="sm"
-                        onClick={() => removeQuestion(idx)}
+                        onClick={() => removeQuestion(index)}
                       >
                         Remove
                       </Button>
                     </Col>
                   </Row>
-
                   <ul className="mt-2">
                     {q.options.map((opt) => (
-                      <li
-                        key={opt.optionId}
-                        style={{
-                          whiteSpace: "normal",
-                          wordWrap: "break-word",
-                          overflowWrap: "break-word",
-                        }}
-                        className="col-10 mt-1"
-                      >
+                      <li key={opt.optionId}>
                         {opt.optionContent}
                         {opt.isCorrect && (
-                          <span style={{ color: "green" }} className="ms-1">
-                            (Correct)
-                          </span>
+                          <span style={{ color: "green" }}> (Correct)</span>
                         )}
                       </li>
                     ))}
@@ -247,15 +262,20 @@ function CreateExam() {
           )}
         </Col>
 
-        {/* Modal Add Question */}
+        {/* Modal Add/Update Question */}
         <Modal
           show={showModal}
-          onHide={() => setShowModal(false)}
+          onHide={() => {
+            setShowModal(false);
+            setIsUpdateMode(false);
+          }}
           centered
           size="lg"
         >
           <Modal.Header closeButton>
-            <Modal.Title>Add Question</Modal.Title>
+            <Modal.Title>
+              {isUpdateMode ? "Update Question" : "Add Question"}
+            </Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Form>
@@ -331,10 +351,9 @@ function CreateExam() {
             </Button>
           </Modal.Footer>
         </Modal>
-        {/* Add Exam Success Modal */}
         <Modal
           show={showSuccessModal}
-          onHide={() => navigate("../exam")}
+          onHide={() => setShowSuccessModal(false)}
           centered
         >
           <Modal.Header>
@@ -342,14 +361,28 @@ function CreateExam() {
           </Modal.Header>
           <Modal.Body>The exam has been created successfully!</Modal.Body>
           <Modal.Footer>
-            <Button variant="primary" onClick={() => navigate("../exam")}>
+            <Button
+              variant="primary"
+              onClick={() => setShowSuccessModal(false)}
+            >
               OK
             </Button>
+            <Button variant="secondary">Back to Exam List</Button>
           </Modal.Footer>
         </Modal>
+        <ErrorModal
+          {...{
+            show: errorMessage,
+            onHide: () => {
+              setErrorMessage("");
+              window.history.back();
+            },
+            message: errorMessage,
+          }}
+        ></ErrorModal>
       </Row>
     </div>
   );
 }
 
-export default CreateExam;
+export default ExamDetail;

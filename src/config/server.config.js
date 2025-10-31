@@ -1,4 +1,4 @@
-const PORT = 8036;
+const PORT = 9999;
 const CONTEXT_PATH = "http://localhost:" + PORT;
 export const SERVER_CONFIG = {
   PORT: PORT,

@@ -1,5 +1,6 @@
-import { Form } from "react-bootstrap";
+import { Form, Modal, Button } from "react-bootstrap";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AuthService from "../../service/auth/AuthService";
 function Register() {
   const [username, setUsername] = useState("");
@@ -7,6 +8,8 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const navigate = useNavigate();
   function handleConfirmPassword(value) {
     setConfirmPassword(value);
     setConfirmPassword(value);
@@ -23,7 +26,7 @@ function Register() {
     }
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!username || !password || !confirmPassword) {
       setErrorMessage("Fields cannot be empty");
@@ -35,11 +38,22 @@ function Register() {
     }
 
     setErrorMessage("");
-    AuthService.register(username, password);
+    let data = await AuthService.register(username, password);
+    if (data && data.success) {
+      setSuccessMessage(data.message || "Registration successful");
+      setShowSuccessModal(true);
+    } else {
+      setErrorMessage(data ? data.message : "Registration failed");
+    }
+  }
+
+  function handleCloseSuccess() {
+    setShowSuccessModal(false);
+    navigate("/");
   }
 
   return (
-    <div>
+    <div className="container-fluid">
       <h1>Register</h1>
       <Form onSubmit={handleSubmit}>
         <Form.Group className="mb-3" controlId="formUsername">
@@ -72,11 +86,24 @@ function Register() {
           />
         </Form.Group>
         {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-        {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
-        <button variant="primary" type="submit">
+        <Button variant="primary" type="submit">
           Submit
-        </button>
+        </Button>
       </Form>
+
+      <Modal show={showSuccessModal} onHide={handleCloseSuccess} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Account Created</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {successMessage || "Your account has been created successfully."}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary" onClick={handleCloseSuccess}>
+            Go to Home
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

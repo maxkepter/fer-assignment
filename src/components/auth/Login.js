@@ -1,4 +1,4 @@
-import { Form } from "react-bootstrap";
+import { Button, Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useContext, useState } from "react";
 import AuthService from "../../service/auth/AuthService";
@@ -11,10 +11,9 @@ function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-
-    let data = AuthService.login(username, password);
+    let data = await AuthService.login(username, password);
     if (data && data.success) {
       setUser(data.user);
       navigate("/");
@@ -24,7 +23,7 @@ function Login() {
   }
 
   return (
-    <div>
+    <div className="container-fluid">
       <h1>Login</h1>
       <Form onSubmit={handleSubmit}>
         <Form.Group className="mb-3" controlId="formUsername">
@@ -48,9 +47,9 @@ function Login() {
           />
         </Form.Group>
         {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-        <button variant="primary" type="submit">
+        <Button variant="primary" type="submit">
           Submit
-        </button>
+        </Button>
         <a href="/register" className="ms-3">
           Register
         </a>

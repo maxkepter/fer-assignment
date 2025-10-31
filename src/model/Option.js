@@ -1,5 +1,6 @@
 class Option {
-  constructor(content, isCorrect) {
+  constructor(optionId, content, isCorrect) {
+    this.optionId = optionId;
     this.content = content;
     this.isCorrect = isCorrect;
   }
