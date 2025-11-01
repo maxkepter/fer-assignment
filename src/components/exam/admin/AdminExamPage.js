@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ExamService } from "../../../service/exam/ExamService";
-import { Button, Card, Form } from "react-bootstrap";
+import { Button, Card, Form, Modal } from "react-bootstrap";
 import {
   Link,
   useNavigate,
@@ -20,6 +20,8 @@ function AdminExamPage() {
   const search = searchParams.get("search");
   const [searchQuery, setSearchQuery] = useState(search || "");
   const [pageNumber, setPageNumber] = useState(page ? parseInt(page) : 1);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteExamId, setDeleteExamId] = useState(null);
   const examsPerPage = 12;
   const navigate = useNavigate();
   useEffect(() => {
@@ -69,6 +71,7 @@ function AdminExamPage() {
     queryParams.append("page", page);
     navigate(`/exams?${queryParams.toString()}`);
   }
+
   return (
     <div>
       <div className="container  py-4">
@@ -139,14 +142,17 @@ function AdminExamPage() {
                           View Details
                         </Link>
                         <Link
-                          href={`/exam/take/${exam.id}`}
+                          to={`../exam/student-exams/${exam.id}`}
                           className="btn btn-success mt-2"
                         >
                           View Student Exam
                         </Link>
                         <Button
                           className="btn-danger mt-2"
-                          onClick={() => deleteExam(exam.id)}
+                          onClick={() => {
+                            setDeleteExamId(exam.id);
+                            setShowDeleteModal(true);
+                          }}
                         >
                           Delete
                         </Button>
@@ -160,6 +166,35 @@ function AdminExamPage() {
             )}
           </div>
         </div>
+        {/* Confirm delete Modal */}
+        <Modal scrollable show={showDeleteModal} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirm Delete</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            Are you sure you want to delete this exam? This action cannot be
+            undone.
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowDeleteModal(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                setShowDeleteModal(false);
+                deleteExam(deleteExamId);
+              }}
+            >
+              Delete
+            </Button>
+          </Modal.Footer>
+        </Modal>
         <Paging
           className="mt-4"
           {...{

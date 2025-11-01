@@ -7,13 +7,15 @@ export const StudentLayout = () => {
   const navItem = [
     { name: "Home", link: "/" },
     { name: "Test", link: "/exam" },
-    { name: "Result", link: "/" },
-    { name: "Profile", link: "/" },
+    { name: "Result", link: "/history" },
   ];
   function getCurrentIndex() {
     const path = location.pathname;
-    const index = navItem.findIndex((item) => item.link === path);
-    return index !== -1 ? index : 0;
+    const matchedItem = navItem
+      .filter((item) => path.startsWith(item.link))
+      .sort((a, b) => b.link.length - a.link.length)[0];
+
+    return matchedItem ? navItem.indexOf(matchedItem) : 0;
   }
 
   return (

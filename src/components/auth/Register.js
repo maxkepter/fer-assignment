@@ -1,6 +1,6 @@
 import { Form, Modal, Button } from "react-bootstrap";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthService from "../../service/auth/AuthService";
 function Register() {
   const [username, setUsername] = useState("");
@@ -53,43 +53,48 @@ function Register() {
   }
 
   return (
-    <div className="container-fluid">
-      <h1>Register</h1>
-      <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-3" controlId="formUsername">
-          <Form.Label>Username</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter username"
-            onChange={(e) => {
-              setUsername(e.target.value);
-            }}
-          />
-        </Form.Group>
-        <Form.Group className="mb-3" controlId="formPassword">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Password"
-            onChange={(e) => {
-              setPassword(e.target.value);
-            }}
-          />
-        </Form.Group>
+    <div className="container-fluid d-flex  align-items-center">
+      <div className="col-4 offset-4 mt-5 p-4 border rounded d-flex flex-column">
+        <h1>Register</h1>
+        <Form onSubmit={handleSubmit}>
+          <Form.Group className="mb-3" controlId="formUsername">
+            <Form.Label>Username</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter username"
+              onChange={(e) => {
+                setUsername(e.target.value);
+              }}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="formPassword">
+            <Form.Label>Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Password"
+              onChange={(e) => {
+                setPassword(e.target.value);
+              }}
+            />
+          </Form.Group>
 
-        <Form.Group className="mb-3" controlId="formConfirmPassword">
-          <Form.Label>Confirm Password</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Confirm Password"
-            onChange={(e) => handleConfirmPassword(e.target.value)}
-          />
-        </Form.Group>
-        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-        <Button variant="primary" type="submit">
-          Submit
-        </Button>
-      </Form>
+          <Form.Group className="mb-3" controlId="formConfirmPassword">
+            <Form.Label>Confirm Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Confirm Password"
+              onChange={(e) => handleConfirmPassword(e.target.value)}
+            />
+          </Form.Group>
+          {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+          <Button variant="success" type="submit">
+            Register
+          </Button>
+          <Link to={"/"} className="ms-3 btn btn-danger">
+            Cancel
+          </Link>
+        </Form>
+      </div>
 
       <Modal show={showSuccessModal} onHide={handleCloseSuccess} centered>
         <Modal.Header closeButton>

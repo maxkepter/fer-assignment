@@ -10,6 +10,12 @@ import AdminLayout from "./components/AdminLayout";
 import { StudentLayout } from "./components/StudentLayout";
 import CreateExam from "./components/exam/admin/CreateExam";
 import ExamDetail from "./components/exam/admin/ExamDetail";
+import { DoExam } from "./components/exam/student/DoExam";
+import StudentExamHistoryPage from "./components/exam/student/StudentExamHistoryPage";
+import { StudentExamDetail } from "./components/exam/student/StudentExamDetail";
+import AdminExamStudentListPage from "./components/exam/admin/AdminExamStudentListPage";
+import { AdminStudentExamDetails } from "./components/exam/admin/AdminStudentExamDetails";
+import { StudentExamLog } from "./components/exam/admin/StudentExamLog";
 function App() {
   return (
     <Routes>
@@ -19,8 +25,11 @@ function App() {
       {/* --- Student routes --- */}
       <Route path="/" element={<StudentLayout />}>
         <Route index element={<Home />} /> {/* / */}
-        <Route path="/exam/*" element={<ExamPage />} />
+        <Route path="/exam" element={<ExamPage />} />
+        <Route path="/history" element={<StudentExamHistoryPage />} />
+        <Route path="/history/:id" element={<StudentExamDetail />} />
       </Route>
+      <Route path="/exam/do/:examId" element={<DoExam />} />
 
       {/* --- Admin routes --- */}
       <Route path="/admin/*" element={<AdminLayout />}>
@@ -28,6 +37,18 @@ function App() {
         <Route path="exam" element={<AdminExamPage />} /> {/* /admin/exam */}
         <Route path="exam/create" element={<CreateExam />} />
         <Route path="exam/:id" element={<ExamDetail />} />
+        <Route
+          path="exam/student-exams/:examId"
+          element={<AdminExamStudentListPage />}
+        />
+        <Route
+          path="exam/student-exam/detail/:id"
+          element={<AdminStudentExamDetails />}
+        />
+        <Route
+          path="exam/student-exam/logs/:studentExamId"
+          element={<StudentExamLog />}
+        />
         {/* /admin/exam */}
       </Route>
     </Routes>

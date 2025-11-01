@@ -1,7 +1,7 @@
 class StudentExam {
   constructor(
     userId,
-    examId,
+    exam,
     startDate,
     submitDate,
     status,
@@ -10,7 +10,7 @@ class StudentExam {
     studentChoices
   ) {
     this.userId = userId;
-    this.examId = examId;
+    this.exam = exam;
     this.startDate = startDate;
     this.submitDate = submitDate;
     this.status = status;

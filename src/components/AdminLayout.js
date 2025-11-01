@@ -7,7 +7,6 @@ const AdminLayout = () => {
   const navItem = [
     { name: "Home", link: "/admin" },
     { name: "Manage Exams", link: "/admin/exam" },
-    { name: "Students", link: "/admin/students" },
   ];
 
   function getCurrentIndex() {

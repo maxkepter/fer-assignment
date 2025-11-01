@@ -35,8 +35,8 @@ async function getAllExams() {
     .then((res) => res.data);
 }
 
-function getExamById(examId) {
-  return axios
+async function getExamById(examId) {
+  return await axios
     .get(`${SERVER_CONFIG.CONTEXT_PATH}/exams/${examId}`)
     .then((res) => res.data);
 }

@@ -6,6 +6,9 @@ function swap(arr, index1, index2) {
 
 function mixArray(arr, mixLevel) {
   const length = arr.length;
+  if (!mixLevel) {
+    mixLevel = length;
+  }
   for (let i = 0; i < mixLevel; i++) {
     const index1 = Math.floor(Math.random() * length);
     const index2 = Math.floor(Math.random() * length);

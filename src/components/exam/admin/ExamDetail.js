@@ -367,7 +367,9 @@ function ExamDetail() {
             >
               OK
             </Button>
-            <Button variant="secondary">Back to Exam List</Button>
+            <Link className="btn btn-secondary" to="../exam">
+              Back to Exam List
+            </Link>
           </Modal.Footer>
         </Modal>
         <ErrorModal
