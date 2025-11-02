@@ -44,53 +44,56 @@ function Header({ index, navItem, disable }) {
         </button>
 
         <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav ms-auto me-4">
-            {navItem &&
-              navItem.map((item, idx) => (
-                <li className="nav-item" key={idx}>
-                  <a
-                    className={
-                      idx === index
-                        ? "nav-link text-dark fw-medium"
-                        : "nav-link"
-                    }
-                    href={item.link}
-                  >
-                    {item.name}
-                  </a>
-                </li>
-              ))}
-          </ul>
-
           {user && user.username ? (
-            <div className="me-3 d-flex align-items-centers gap-3 r">
-              <p className="m-auto"> Xin chào, {user.username}</p>
-              <button
-                className="btn "
-                onClick={() => {
-                  handleLogout();
-                }}
-              >
-                Logout
-              </button>
+            <div className="d-flex w-100 justify-content-between align-items-center">
+              <ul className="navbar-nav ms-auto me-4">
+                {navItem &&
+                  navItem.map((item, idx) => (
+                    <li className="nav-item" key={idx}>
+                      <a
+                        className={
+                          idx === index
+                            ? "nav-link text-dark fw-medium"
+                            : "nav-link"
+                        }
+                        href={item.link}
+                      >
+                        {item.name}
+                      </a>
+                    </li>
+                  ))}
+              </ul>
+              <div className="me-3 d-flex align-items-centers gap-3 r">
+                <p className="m-auto"> Xin chào, {user.username}</p>
+                <button
+                  className="btn "
+                  onClick={() => {
+                    handleLogout();
+                  }}
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="d-flex">
-              <button
-                className="btn btn-outline-primary me-2"
-                onClick={() => navigate("/login")}
-              >
-                Login
-              </button>
-              <button
-                className="btn text-white"
-                style={{
-                  background: "linear-gradient(135deg,#4f46e5,#6366f1)",
-                }}
-                onClick={() => navigate("/register")}
-              >
-                Register
-              </button>
+            <div className="d-flex w-100 justify-content-end align-items-center">
+              <div>
+                <button
+                  className="btn btn-outline-primary me-2"
+                  onClick={() => navigate("/login")}
+                >
+                  Login
+                </button>
+                <button
+                  className="btn text-white"
+                  style={{
+                    background: "linear-gradient(135deg,#4f46e5,#6366f1)",
+                  }}
+                  onClick={() => navigate("/register")}
+                >
+                  Register
+                </button>
+              </div>
             </div>
           )}
         </div>

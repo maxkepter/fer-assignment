@@ -13,26 +13,22 @@ let examId = "b36d";
 let userId = "9929";
 
 //Test submit exam
-// StudentExamService.doExam(examId, userId).then(async ({ studentExam }) => {
-//   // Simulate answering questions
-//   let selectOption = [];
-//   studentExam.examDetail.forEach((detail, index) => {
-//     selectOption.push({
-//       questionId: detail.questionId,
-//       selectedOptionIds: [detail.options[0].optionId], // Select first option for all questions
-//     });
-//   });
-//   studentExam.studentChoices = selectOption;
-//   StudentExamService.saveProgress(
-//     studentExam.id,
-//     studentExam.studentChoices,
-//     []
-//   ).then(() => {
-//     console.log("Progress saved before submission.");
-//   });
-//   let data = await StudentExamService.submitStudentExam(studentExam.id);
-// });
-
-//test submiit
-let data = await StudentExamService.submitStudentExam("1f0a");
-// console.log(data);
+StudentExamService.doExam(examId, userId).then(async ({ studentExam }) => {
+  // Simulate answering questions
+  let selectOption = [];
+  studentExam.examDetail.forEach((detail, index) => {
+    selectOption.push({
+      questionId: detail.questionId,
+      selectedOptionIds: [detail.options[0].optionId], // Select first option for all questions
+    });
+  });
+  studentExam.studentChoices = selectOption;
+  StudentExamService.saveProgress(
+    studentExam.id,
+    studentExam.studentChoices,
+    []
+  ).then(() => {
+    console.log("Progress saved before submission.");
+  });
+  let data = await StudentExamService.submitStudentExam(studentExam.id);
+});

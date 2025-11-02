@@ -49,7 +49,9 @@ function AdminExamStudentListPage() {
 
   // Lọc và phân trang
   useEffect(() => {
-    let filtered = studentExamList;
+    let filtered = studentExamList.sort(
+      (a, b) => new Date(b.startDate) - new Date(a.startDate)
+    );
 
     setFilteredList(filtered);
     const pageData = PagingUtils.getPage(filtered, pageNumber, itemsPerPage);

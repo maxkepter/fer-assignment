@@ -16,40 +16,46 @@ import { StudentExamDetail } from "./components/exam/student/StudentExamDetail";
 import AdminExamStudentListPage from "./components/exam/admin/AdminExamStudentListPage";
 import { AdminStudentExamDetails } from "./components/exam/admin/AdminStudentExamDetails";
 import { StudentExamLog } from "./components/exam/admin/StudentExamLog";
+import AuthWrapper from "./components/auth/AuthWapper";
+
 function App() {
   return (
     <Routes>
       {/* --- Public routes --- */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+
       {/* --- Student routes --- */}
-      <Route path="/" element={<StudentLayout />}>
-        <Route index element={<Home />} /> {/* / */}
-        <Route path="/exam" element={<ExamPage />} />
-        <Route path="/history" element={<StudentExamHistoryPage />} />
-        <Route path="/history/:id" element={<StudentExamDetail />} />
+      <Route element={<AuthWrapper role={["Admin", "Student"]} />}>
+        <Route path="/" element={<StudentLayout />}>
+          <Route index element={<Home />} />
+          <Route path="exam" element={<ExamPage />} />
+          <Route path="history" element={<StudentExamHistoryPage />} />
+          <Route path="history/:id" element={<StudentExamDetail />} />
+        </Route>
+        <Route path="exam/do/:examId" element={<DoExam />} />
       </Route>
-      <Route path="/exam/do/:examId" element={<DoExam />} />
 
       {/* --- Admin routes --- */}
-      <Route path="/admin/*" element={<AdminLayout />}>
-        <Route index element={<AdminHomePage />} /> {/* /admin */}
-        <Route path="exam" element={<AdminExamPage />} /> {/* /admin/exam */}
-        <Route path="exam/create" element={<CreateExam />} />
-        <Route path="exam/:id" element={<ExamDetail />} />
-        <Route
-          path="exam/student-exams/:examId"
-          element={<AdminExamStudentListPage />}
-        />
-        <Route
-          path="exam/student-exam/detail/:id"
-          element={<AdminStudentExamDetails />}
-        />
-        <Route
-          path="exam/student-exam/logs/:studentExamId"
-          element={<StudentExamLog />}
-        />
-        {/* /admin/exam */}
+      <Route element={<AuthWrapper role={["Admin"]} />}>
+        <Route path="/admin/*" element={<AdminLayout />}>
+          <Route index element={<AdminHomePage />} />
+          <Route path="exam" element={<AdminExamPage />} />
+          <Route path="exam/create" element={<CreateExam />} />
+          <Route path="exam/:id" element={<ExamDetail />} />
+          <Route
+            path="exam/student-exams/:examId"
+            element={<AdminExamStudentListPage />}
+          />
+          <Route
+            path="exam/student-exam/detail/:id"
+            element={<AdminStudentExamDetails />}
+          />
+          <Route
+            path="exam/student-exam/logs/:studentExamId"
+            element={<StudentExamLog />}
+          />
+        </Route>
       </Route>
     </Routes>
   );

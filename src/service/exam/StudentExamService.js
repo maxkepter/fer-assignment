@@ -6,52 +6,42 @@ import { ExamLogService } from "./ExamLogService.js";
 import { ExamService } from "./ExamService.js";
 import { UserService } from "../UserService.js";
 import ExamLog from "../../model/ExamLog.js";
+// ==============================
+// MAIN SERVICE
+// ==============================
 
-function doExam(examId, userId) {
-  return getDoingExam(userId)
-    .then((doingExam) => {
-      if (doingExam && doingExam.length > 0) {
-        // If there's an ongoing exam, return it
-        return { isDoingExam: true, studentExam: doingExam[0] };
-      }
-      // No ongoing exam, create a new one
-      return createStudentExam(examId, userId).then((newExam) => ({
-        isDoingExam: false,
-        studentExam: newExam,
-      }));
-    })
-    .catch((error) => {
-      console.error("Error while processing exam:", error);
-      throw new Error("Error while processing exam: " + error.message);
-    });
+async function doExam(examId, userId) {
+  try {
+    const doingExam = await getDoingExam(userId);
+    if (doingExam && doingExam.length > 0) {
+      return { isDoingExam: true, studentExam: doingExam[0] };
+    }
+
+    const newExam = await createStudentExam(examId, userId);
+    return { isDoingExam: false, studentExam: newExam };
+  } catch (error) {
+    console.error("Error while processing exam:", error);
+    throw new Error("Error while processing exam: " + error.message);
+  }
 }
+
 async function createStudentExam(examId, userId) {
   try {
-    // Fetch user and exam details in parallel
     const [exam, user] = await Promise.all([
       ExamService.getExamById(examId),
       UserService.getUserById(userId),
     ]);
 
-    if (!exam) {
-      throw new Error("Exam not found with ID: " + examId);
-    }
-    if (!user) {
-      throw new Error("User not found with ID: " + userId);
-    }
+    if (!exam) throw new Error("Exam not found with ID: " + examId);
+    if (!user) throw new Error("User not found with ID: " + userId);
 
-    // Mix questions and options
     const examDetails = ArrayUtils.mixArray(exam.questions)
       .slice(0, Number.parseInt(exam.numberQuestion))
-      .map((question) => {
-        question.options = ArrayUtils.mixArray(question.options);
-        return question;
-      });
+      .map((q) => ({
+        ...q,
+        options: ArrayUtils.mixArray(q.options),
+      }));
 
-    console.log("Number of questions selected:", examDetails.length);
-    console.log("Number of questions in exam:", exam.numberQuestion);
-
-    // Create StudentExam instance
     const studentExam = new StudentExam(
       user.id,
       { id: exam.id, name: exam.examName, duration: exam.duration },
@@ -63,15 +53,13 @@ async function createStudentExam(examId, userId) {
       []
     );
 
-    // Save to server
     const res = await axios.post(
       `${SERVER_CONFIG.CONTEXT_PATH}/studentExams`,
       studentExam
     );
-
     const createdExam = res.data;
-    // console.log("Student exam created:", createdExam);
-    // Create log entry
+
+    // Ghi log sau khi tạo xong
     await ExamLogService.createLog(
       new ExamLog(
         createdExam.id,
@@ -79,13 +67,7 @@ async function createStudentExam(examId, userId) {
         "CREATE",
         `Student exam created for user ID: ${user.id} and exam ID: ${exam.id}`
       )
-    )
-      .then(() => {
-        console.log("Exam creation log recorded.");
-      })
-      .catch((error) => {
-        console.error("Error recording exam creation log:", error);
-      });
+    );
 
     return createdExam;
   } catch (error) {
@@ -93,144 +75,160 @@ async function createStudentExam(examId, userId) {
   }
 }
 
-function saveProgress(studentExamId, studentChoices, selectLog) {
-  return axios
-    .patch(`${SERVER_CONFIG.CONTEXT_PATH}/studentExams/${studentExamId}`, {
-      studentChoices: studentChoices,
-    })
-    .then(() => {
-      selectLog.forEach((log) => {
-        ExamLogService.createLog(log);
-      });
-    })
-    .catch((error) => {
-      throw new Error("Error updating student choices: " + error.message);
-    });
+async function saveProgress(studentExamId, studentChoices, selectLog) {
+  try {
+    await axios.patch(
+      `${SERVER_CONFIG.CONTEXT_PATH}/studentExams/${studentExamId}`,
+      {
+        studentChoices,
+      }
+    );
+
+    // Record progress logs if any
+    if (selectLog && selectLog.length > 0) {
+      for (const log of selectLog) {
+        await ExamLogService.createLog(log);
+      }
+      console.log("Progress logs recorded:", selectLog.length);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating student choices:", error);
+    throw new Error("Error updating student choices: " + error.message);
+  }
 }
 
 async function submitStudentExam(studentExamId) {
-  let data;
-  let studentExam = await getStudentExamById(studentExamId);
-  let score = calculateScore(studentExam);
-  studentExam.score = score;
-  studentExam.status = "Submitted";
-  studentExam.submitDate = new Date();
-  data = { success: true, studentExam: studentExam };
-  axios
-    .patch(`${SERVER_CONFIG.CONTEXT_PATH}/studentExams/${studentExamId}`, {
-      score: score,
+  try {
+    let studentExam = await getStudentExamById(studentExamId);
+    let score = calculateScore(studentExam);
+
+    studentExam = {
+      ...studentExam,
+      score,
       status: "Submitted",
-      submitDate: studentExam.submitDate,
-    })
-    .then(() => {
-      ExamLogService.createLog(
-        new ExamLog(
-          studentExam.id,
-          new Date(),
-          "SUBMIT",
-          `Student exam submitted with score: ${studentExam.score}`
-        )
-      );
-    })
-    .catch((error) => {
-      console.error("Error submitting student exam:", error);
-      data = { success: false, message: error.message };
-    });
-  return data;
+      submitDate: new Date(),
+    };
+
+    const res = await axios.patch(
+      `${SERVER_CONFIG.CONTEXT_PATH}/studentExams/${studentExamId}`,
+      {
+        score,
+        status: "Submitted",
+        submitDate: studentExam.submitDate,
+      }
+    );
+
+    studentExam = res.data;
+
+    // Record submission log
+    await ExamLogService.createLog(
+      new ExamLog(
+        studentExam.id,
+        new Date(),
+        "SUBMIT",
+        `Student exam submitted with score: ${studentExam.score}`
+      )
+    );
+
+    return { success: true, studentExam };
+  } catch (error) {
+    console.error("Error submitting student exam:", error);
+    return { success: false, message: error.message };
+  }
 }
 
+// ==============================
+// FETCH + UTILS
+// ==============================
+
 async function getAllStudentExams() {
-  let data = await axios
-    .get(`${SERVER_CONFIG.CONTEXT_PATH}/studentExams`)
-    .then((response) => response.data);
-  return data;
+  const res = await axios.get(`${SERVER_CONFIG.CONTEXT_PATH}/studentExams`);
+  return res.data;
 }
 
 async function getStudentExamByUserId(userId) {
-  let data = await axios
-    .get(`${SERVER_CONFIG.CONTEXT_PATH}/studentExams?userId=${userId}`)
-    .then((response) => response.data)
-    .catch((error) => {
-      throw new Error(
-        "Error fetching student exams by user ID: " + error.message
-      );
-    });
-  return data;
+  try {
+    const res = await axios.get(
+      `${SERVER_CONFIG.CONTEXT_PATH}/studentExams?userId=${userId}`
+    );
+    return res.data;
+  } catch (error) {
+    throw new Error(
+      "Error fetching student exams by user ID: " + error.message
+    );
+  }
 }
 
 async function getStudentExamByExamId(examId) {
-  let data = await axios
-    .get(`${SERVER_CONFIG.CONTEXT_PATH}/studentExams`)
-    .then((response) => response.data)
-    .catch((error) => {
-      throw new Error(
-        "Error fetching student exams by exam ID: " + error.message
-      );
-    });
-
-  return data.filter((se) => se.exam.id === examId);
+  try {
+    const res = await axios.get(`${SERVER_CONFIG.CONTEXT_PATH}/studentExams`);
+    return res.data.filter((se) => se.exam.id === examId);
+  } catch (error) {
+    throw new Error(
+      "Error fetching student exams by exam ID: " + error.message
+    );
+  }
 }
 
 async function getStudentExamWithParams(params) {
-  let queryString = new URLSearchParams(params).toString();
-  let data = await axios
-    .get(`${SERVER_CONFIG.CONTEXT_PATH}/studentExams?${queryString}`)
-    .then((response) => response.data)
-    .catch((error) => {
-      throw new Error(
-        "Error fetching student exams with params: " + error.message
-      );
-    });
-  return data;
+  try {
+    const queryString = new URLSearchParams(params).toString();
+    const res = await axios.get(
+      `${SERVER_CONFIG.CONTEXT_PATH}/studentExams?${queryString}`
+    );
+    return res.data;
+  } catch (error) {
+    throw new Error(
+      "Error fetching student exams with params: " + error.message
+    );
+  }
 }
 
-function getStudentExamById(studentExamId) {
-  return axios
-    .get(`${SERVER_CONFIG.CONTEXT_PATH}/studentExams/${studentExamId}`)
-    .then((response) => response.data);
+async function getStudentExamById(studentExamId) {
+  const res = await axios.get(
+    `${SERVER_CONFIG.CONTEXT_PATH}/studentExams/${studentExamId}`
+  );
+  return res.data;
 }
 
 function calculateScore(studentExam) {
-  let studentChoices = studentExam.studentChoices;
-  if (!studentChoices || studentChoices.length === 0) {
-    return 0;
-  }
+  const studentChoices = studentExam.studentChoices || [];
+  if (studentChoices.length === 0) return 0;
+
   let correctCount = 0;
-  let correctAnswers = getCorrectAnswers(studentExam.examDetail);
+  const correctAnswers = getCorrectAnswers(studentExam.examDetail);
+
   correctAnswers.forEach((answer) => {
-    let studentAnswer = studentChoices.find(
+    const studentAnswer = studentChoices.find(
       (choice) => choice.questionId === answer.questionId
     );
     if (studentAnswer) {
-      let isCorrect =
+      const isCorrect =
         JSON.stringify(answer.correctOptions.sort()) ===
         JSON.stringify(studentAnswer.selectedOptionIds.sort());
-      if (isCorrect) {
-        correctCount++;
-      }
+      if (isCorrect) correctCount++;
     }
   });
-  let score = (correctCount / correctAnswers.length) * 100;
 
-  score = Math.round(score * 100) / 100; // Round to 2 decimal places
-
+  const score =
+    Math.round((correctCount / correctAnswers.length) * 10000) / 100;
   return score;
 }
+
 function getCorrectAnswers(examDetail) {
-  return examDetail.map((question) => {
-    let correctAnswers = {
-      questionId: question.questionId,
-      correctOptions: question.options
-        .filter((option) => option.isCorrect)
-        .map((option) => option.optionId),
-    };
-    return correctAnswers;
-  });
+  return examDetail.map((question) => ({
+    questionId: question.questionId,
+    correctOptions: question.options
+      .filter((option) => option.isCorrect)
+      .map((option) => option.optionId),
+  }));
 }
 
 async function getDoingExam(userId) {
-  let studentExam = await getStudentExamWithParams({
-    userId: userId,
+  const studentExam = await getStudentExamWithParams({
+    userId,
     status: "In Progress",
   });
   return studentExam;

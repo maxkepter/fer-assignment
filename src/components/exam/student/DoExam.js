@@ -86,8 +86,6 @@ export const DoExam = () => {
   async function sendProgress() {
     if (!studentExam) return;
 
-    if (selectLog.length === 0) return;
-
     const studentChoices = Object.entries(answers).map(([qId, optionIds]) => ({
       questionId: Number.parseInt(qId),
       selectedOptionIds: optionIds,
@@ -137,8 +135,8 @@ export const DoExam = () => {
       new ExamLog(
         studentExam.id,
         new Date(),
-        isSelect ? "Select Option" : "Deselect Option",
-        !isSelect
+        !isSelect ? "Select Option" : "Deselect Option",
+        isSelect
           ? `Deselected option ID: ${optId} for question ID: ${qId}`
           : `Selected option ID: ${optId} for question ID: ${qId}`
       ),
@@ -165,16 +163,22 @@ export const DoExam = () => {
     });
 
   async function handleSubmit() {
-    await sendProgress();
-    let data = await StudentExamService.submitStudentExam(studentExam.id);
-    console.log(data);
-    setShowSubmit(false);
-    if (data && data.success) {
-      setStudentExam(data.studentExam);
-      setIsFinished(true);
-      setResultModal(true);
-    } else {
-      alert("Error submitting exam: " + (data ? data.message : ""));
+    try {
+      await sendProgress();
+      const data = await StudentExamService.submitStudentExam(studentExam.id);
+      console.log(data);
+      setShowSubmit(false);
+
+      if (data?.success) {
+        setStudentExam(data.studentExam);
+        setIsFinished(true);
+        setResultModal(true);
+      } else {
+        alert("Error submitting exam: " + (data?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Unexpected error in handleSubmit:", err);
+      alert("An unexpected error occurred while submitting the exam.");
     }
   }
 

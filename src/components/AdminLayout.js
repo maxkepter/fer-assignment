@@ -1,9 +1,13 @@
 import Header from "./Header";
 import Footer from "./Footer";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { UserContext } from "../UserContext";
 
 const AdminLayout = () => {
   const location = useLocation();
+  const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const navItem = [
     { name: "Home", link: "/admin" },
     { name: "Manage Exams", link: "/admin/exam" },
